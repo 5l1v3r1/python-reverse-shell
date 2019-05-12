@@ -38,7 +38,7 @@ Commands      Desscription
 :download     Download file from client machine
 :upload       Upload file to client machine
 :kill         Kill the connection with client machine
-:exec         Run excternal command
+:exec         Run external command
 :check        check if client machine is connected to internet
 :browse       Open an website on client machine browser
 pwd           Print working directory in client machine
