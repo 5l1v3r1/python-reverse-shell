@@ -10,12 +10,11 @@ a python script for make a reverse shell to your server or client machine
   * cd python-reverse-shell
   * Download Complete
 
-#Note
+# Note
   * make sure to select the same ip and port in client file with server ip and port
 
 ***
-[x] Work on any platform has python3 or 2 instaled
-
+- [x] Work on any platform has python3 or 2 instaled
 ***
 
 # That's All :)
